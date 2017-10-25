@@ -135,6 +135,11 @@ Function Protect-Privacy {
         $Holo = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic'
         Set-ItemProperty $Holo -Name FirstRunSucceeded -Value 0 -Verbose
     }
+
+    If ('HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications') {
+        $Live = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'
+        New-ItemProperty $Live -Name NoTileApplicationNotification -Value 1 -Verbose
+    }
 }
 Function Revert-Changes {        
 
