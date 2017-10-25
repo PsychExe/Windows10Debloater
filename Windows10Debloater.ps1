@@ -77,7 +77,6 @@ Function Protect-Privacy {
     
     #Stops Cortana from being used as part of your Windows Search Function
     If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search') {
-        #Disables Cortana
         $Search = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search'
         Set-ItemProperty $Search -Name AllowCortana -Value 0 -Verbose
     }
@@ -95,7 +94,7 @@ Function Protect-Privacy {
     If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content\') {
         $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content"
         Mkdir $registryPath
-        New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 0 -Verbose
+        New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 1 -Verbose
     }
            
     Sleep 1
@@ -118,6 +117,19 @@ Function Protect-Privacy {
         New-ItemProperty $Progids -Name NoOpenWith -Verbose
         New-ItemProperty $Progids -Name NoStaticDefaultVerb -Verbose
     }
+
+    If ('HKCR:\.pdf\OpenWithList') {
+        $List = 'HKCR:\.pdf\OpenWithList'
+        New-ItemProperty $List -Name NoOpenWith -Verbose
+        New-ItemProperty $List -Name NoOpenWith -Verbose
+    }
+
+    #Appends an underscore '_' to the Registry key for Edge
+    If ('HKCR:\AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723') {
+        $Edge = 'HKCR:\AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723'
+        Set-Item $Edge AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723_ -Verbose
+    }
+
 
     Write-Output "Disabling Mixed Reality Portal"
     If ('HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic') {
