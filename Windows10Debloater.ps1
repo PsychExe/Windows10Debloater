@@ -136,6 +136,7 @@ Function Protect-Privacy {
         Set-ItemProperty $Holo -Name FirstRunSucceeded -Value 0 -Verbose
     }
 
+    Write-Output "Disabling live tiles"
     If ('HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications') {
         $Live = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'
         New-ItemProperty $Live -Name NoTileApplicationNotification -Value 1 -Verbose
