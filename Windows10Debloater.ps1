@@ -130,8 +130,7 @@ Function Protect-Privacy {
         Set-Item $Edge AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723_ -Verbose
     }
 
-
-    Write-Output "Disabling Mixed Reality Portal"
+    Write-Output "Setting Mixed Reality Portal value to 0 so that you can uninstall it in Settings"
     If ('HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic') {
         $Holo = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic'
         Set-ItemProperty $Holo -Name FirstRunSucceeded -Value 0 -Verbose
