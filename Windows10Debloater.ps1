@@ -83,11 +83,14 @@ Function Protect-Privacy {
     }
     
     #Stops the Windows Feedback Experience from sending anonymous data
-    If (!('HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds')) { 
-        mkdir 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
-        $Period = 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
-        New-Item $Period
-        Set-ItemProperty -Name PeriodInNanoSeconds -Value 0 -Verbose
+    If ('HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds') { 
+        $Period1 = 'HKCU:\Software\Microsoft\Siuf'
+        $Period2 = 'HKCU:\Software\Microsoft\Siuf\Rules'
+        $Period3 = 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
+        mkdir $Period1
+        mkdir $Period2
+        mkdir $Period3   
+        New-ItemProperty $Period3 -Name PeriodInNanoSeconds -Value 0 -Verbose
     }
            
     Write-Output "Adding Registry key to prevent bloatware apps from returning"
