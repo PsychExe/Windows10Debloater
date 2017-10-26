@@ -3,6 +3,7 @@
 
 #This function finds any AppX/AppXProvisioned package and uninstalls it, except for Freshpaint, Windows Calculator, Windows Store, and Windows Photos.
 #Also, to note - This does NOT remove essential system services/software/etc such as .NET framework installations, Cortana, Edge, etc.
+
 Function Start-Debloat {
 
     Get-AppxPackage -AllUsers |
@@ -83,6 +84,7 @@ Function Protect-Privacy {
     
     #Stops the Windows Feedback Experience from sending anonymous data
     If (!('HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds')) { 
+        mkdir 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
         $Period = 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
         New-Item $Period
         Set-ItemProperty -Name PeriodInNanoSeconds -Value 0 -Verbose
@@ -91,37 +93,42 @@ Function Protect-Privacy {
     Write-Output "Adding Registry key to prevent bloatware apps from returning"
            
     #Prevents bloatware applications from returning
-    If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content\') {
+    If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content') {
         $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content"
         Mkdir $registryPath
         New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 1 -Verbose
     }
            
-    Sleep 1
-           
-    Write-Output "Stopping Edge from taking over as the default .PDF viewer"
-           
+    Write-Output "Stopping Edge from taking over as the default .PDF viewer"   
     #Stops edge from taking over as the default .PDF viewer
-    If ('HKCR:\.pdf') {
-        #This is the .pdf file association string
-        $PDF = 'HKCR:\.pdf'
-        New-ItemProperty $PDF -Name NoOpenWith -Verbose
-        New-ItemProperty $PDF -Name NoStaticDefaultVerb -Verbose
-    }
-           
-    Sleep 1
-           
-    If ('HKCR:\.pdf\OpenWithProgids') {
-        #This is the .pdf file association string
-        $Progids = 'HKCR:\.pdf\OpenWithProgids'
-        New-ItemProperty $Progids -Name NoOpenWith -Verbose
-        New-ItemProperty $Progids -Name NoStaticDefaultVerb -Verbose
+    If (!(Get-ItemProperty 'HKCR:\.pdf' -Name NoOpenWith)) {
+        $NoOpen = 'HKCR:\.pdf'
+        New-ItemProperty $NoOpen -Name NoOpenWith -Verbose
     }
 
-    If ('HKCR:\.pdf\OpenWithList') {
-        $List = 'HKCR:\.pdf\OpenWithList'
-        New-ItemProperty $List -Name NoOpenWith -Verbose
-        New-ItemProperty $List -Name NoOpenWith -Verbose
+    If (!(Get-ItemProperty 'HKCR:\.pdf' -Name NoStaticDefaultVerb)) {
+        $NoStatic = 'HKCR:\.pdf'
+        New-ItemProperty $NoStatic -Name NoStaticDefaultVerb
+    }
+
+    If (!(Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoOpenWith)) {
+        $NoOpen = 'HKCR:\.pdf\OpenWithProgids'
+        New-ItemProperty $NoOpen -Name NoOpenWith -Verbose
+    }
+
+    If (!(Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoStaticDefaultVerb)) {
+        $NoStatic = 'HKCR:\.pdf\OpenWithProgids'
+        New-ItemProperty $NoStatic -Name NoStaticDefaultVerb
+    }
+
+    If (!(Get-ItemProperty 'HKCR:\.pdf\OpenWithList' -Name NoOpenWith)) {
+        $NoOpen = 'HKCR:\.pdf\OpenWithList'
+        New-ItemProperty $NoOpen -Name NoOpenWith -Verbose
+    }
+
+    If (!(Get-ItemProperty 'HKCR:\.pdf\OpenWithList' -Name NoStaticDefaultVerb)) {
+        $NoStatic = 'HKCR:\.pdf\OpenWithList'
+        New-ItemProperty $NoStatic -Name NoStaticDefaultVerb
     }
 
     #Appends an underscore '_' to the Registry key for Edge
@@ -137,7 +144,8 @@ Function Protect-Privacy {
     }
 
     Write-Output "Disabling live tiles"
-    If ('HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications') {
+    If (!(Test-Path 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications')) {
+        mkdir 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'        
         $Live = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'
         New-ItemProperty $Live -Name NoTileApplicationNotification -Value 1 -Verbose
     }
@@ -148,6 +156,87 @@ Function Revert-Changes {
 
     #This line reinstalls all of the bloatware that was removed
     Get-AppxPackage -AllUsers | ForEach {Add-AppxPackage -Verbose -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"} -ErrorAction SilentlyContinue
+
+
+    #Disables Windows Feedback Experience
+    If (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo') {
+        $Advertising = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo'
+        Set-ItemProperty $Advertising -Name Enabled -Value 1 -Verbose
+    }
+    
+    #Stops Cortana from being used as part of your Windows Search Function
+    If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search') {
+        $Search = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search'
+        Set-ItemProperty $Search -Name AllowCortana -Value 1 -Verbose
+    }
+    
+    #Stops the Windows Feedback Experience from sending anonymous data
+    If (!('HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds')) { 
+        mkdir 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
+        $Period = 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
+        New-Item $Period
+        Set-ItemProperty -Name PeriodInNanoSeconds -Value 1 -Verbose
+    }
+           
+    Write-Output "Adding Registry key to prevent bloatware apps from returning"
+           
+    #Prevents bloatware applications from returning
+    If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content') {
+        $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content"
+        Mkdir $registryPath
+        New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 0 -Verbose
+    }
+           
+    Write-Output "Stopping Edge from taking over as the default .PDF viewer"
+    #Stops edge from taking over as the default .PDF viewer
+    If (Get-ItemProperty 'HKCR:\.pdf' -Name NoOpenWith) {
+        $NoOpen = 'HKCR:\.pdf'
+        Remove-ItemProperty $NoOpen -Name NoOpenWith -Verbose
+    }
+
+    If (Get-ItemProperty 'HKCR:\.pdf' -Name NoStaticDefaultVerb) {
+        $NoStatic = 'HKCR:\.pdf'
+        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb
+    }
+
+    If (Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoOpenWith) {
+        $NoOpen = 'HKCR:\.pdf\OpenWithProgids'
+        Remove-ItemProperty $NoOpen -Name NoOpenWith -Verbose
+    }
+
+    If (Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoStaticDefaultVerb) {
+        $NoStatic = 'HKCR:\.pdf\OpenWithProgids'
+        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb
+    }
+
+    If (Get-ItemProperty 'HKCR:\.pdf\OpenWithList' -Name NoOpenWith) {
+        $NoOpen = 'HKCR:\.pdf\OpenWithList'
+        Remove-ItemProperty $NoOpen -Name NoOpenWith -Verbose
+    }
+
+    If (Get-ItemProperty 'HKCR:\.pdf\OpenWithList' -Name NoStaticDefaultVerb) {
+        $NoStatic = 'HKCR:\.pdf\OpenWithList'
+        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb
+    }
+
+    #Removes an underscore '_' from the Registry key for Edge
+    If ('HKCR:\AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723') {
+        $Edge = 'HKCR:\AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723'
+        Set-Item $Edge AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723 -Verbose
+    }
+
+    Write-Output "Setting Mixed Reality Portal value to 1"
+    If ('HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic') {
+        $Holo = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic'
+        Set-ItemProperty $Holo -Name FirstRunSucceeded -Value 1 -Verbose
+    }
+
+    Write-Output "Enabling live tiles"
+    If (!(Test-Path 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications')) {
+        mkdir 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'        
+        $Live = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'
+        New-ItemProperty $Live -Name NoTileApplicationNotification -Value 0 -Verbose
+    }
 
     #Stops Cortana from being used as part of your Windows Search Function
     If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search') {
@@ -165,8 +254,6 @@ Function Revert-Changes {
         New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 1 -Verbose
     }
        
-    Sleep 1
-       
     Write-Output "Stopping Edge from taking over as the default .PDF viewer"
        
     If (!(Get-ItemProperty 'HKCR:\.pdf' -Name NoOpenWith)) {
@@ -175,20 +262,12 @@ Function Revert-Changes {
         New-ItemProperty $PDF -Name NoOpenWith -Verbose
         New-ItemProperty $PDF -Name NoStaticDefaultVerb -Verbose
     }
-    else {
-        Break
-    }
-       
-    Sleep 1
-       
+
     If (!(Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoOpenWith)) {
         #This is the .pdf file association string
         $Progids = 'HKCR:\.pdf\OpenWithProgids'
         New-ItemProperty $Progids -Name NoOpenWith -Verbose
         New-ItemProperty $Progids -Name NoStaticDefaultVerb -Verbose
-    }
-    else {
-        Break
     }
 
     #Tells Windows to enable your advertising information.
@@ -242,12 +321,12 @@ Switch ($ReadHost) {
     #This will debloat Windows 10
     Debloat {
         Write-Output "Starting Debloat. Uninstalling bloatware and removing the registry keys."; $PublishSettings = $true
-        Start-Debloat
-        Remove-Keys
+        Start-Debloat | Out-File C:\Windows10Debloater\DebloatLog.txt -Append
+        Remove-Keys | Out-File C:\Windows10Debloater\DebloatLog.txt -Append
     }
     Revert {
         Write-Output "Reverting changes..."; $PublishSettings = $false
-        Revert-Changes
+        Revert-Changes | Out-File C:\Windows10Debloater\Revert-ChangesLog.txt -Append
     }
 }
     
@@ -258,7 +337,7 @@ $Readhost = Read-Host " ( Yes / No ) "
 Switch ($ReadHost) {
     Yes {
         Write-Output "Disabling Cortana from being active within Windows Search, disabling Feedback to Microsoft, and stopping Edge from taking over as the PDF viewer."; $PublishSettings = $true
-        Protect-Privacy
+        Protect-Privacy | Out-File C:\Windows10Debloater\Protect-PrivacyLog.txt
     }
     No {$PublishSettings = $false}
 }
