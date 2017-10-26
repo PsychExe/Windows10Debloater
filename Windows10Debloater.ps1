@@ -301,18 +301,6 @@ Switch ($ReadHost) {
     No {$PublishSettings = $false} 
 }
     
-#Switch statement containing Yes/No options
-Write-Output "Do you want to continue this script?"
-$ReadHost = Read-Host " ( Yes / No ) "
-Switch ($ReadHost) {
-    Yes {Write-Output "Continuing..."; $PublishSettings = $true}
-    No {
-        Write-Output "Exiting script."; $PublishSettings = $false
-        Sleep 1
-        Exit
-    }
-}
-    
 #Switch statement containing Debloat/Revert options
 Write-Output "The following options will allow you to either Debloat Windows 10, or to revert changes made after Debloating Windows 10.
     Choose 'Debloat' to Debloat Windows 10 or choose 'Revert' to revert changes." 
