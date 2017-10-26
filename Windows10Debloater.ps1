@@ -321,12 +321,12 @@ Switch ($ReadHost) {
     #This will debloat Windows 10
     Debloat {
         Write-Output "Starting Debloat. Uninstalling bloatware and removing the registry keys."; $PublishSettings = $true
-        Start-Debloat | Out-File C:\Windows10Debloater\DebloatLog.txt -Append
-        Remove-Keys | Out-File C:\Windows10Debloater\DebloatLog.txt -Append
+        Start-Debloat
+        Remove-Keys
     }
     Revert {
         Write-Output "Reverting changes..."; $PublishSettings = $false
-        Revert-Changes | Out-File C:\Windows10Debloater\Revert-ChangesLog.txt -Append
+        Revert-Changes
     }
 }
     
@@ -337,7 +337,7 @@ $Readhost = Read-Host " ( Yes / No ) "
 Switch ($ReadHost) {
     Yes {
         Write-Output "Disabling Cortana from being active within Windows Search, disabling Feedback to Microsoft, and stopping Edge from taking over as the PDF viewer."; $PublishSettings = $true
-        Protect-Privacy | Out-File C:\Windows10Debloater\Protect-PrivacyLog.txt
+        Protect-Privacy
     }
     No {$PublishSettings = $false}
 }
