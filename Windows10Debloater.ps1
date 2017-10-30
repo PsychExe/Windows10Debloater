@@ -11,16 +11,17 @@ Function Start-Debloat {
         where-object {$_.name -notlike "*Microsoft.WindowsCalculator*"} |
         where-object {$_.name -notlike "*Microsoft.WindowsStore*"} |
         where-object {$_.name -notlike "*Microsoft.Windows.Photos*"} |
-        Remove-AppxPackage -ErrorAction SilentlyContinue -Verbose
-
-
+        Remove-AppxPackage -ErrorAction SilentlyContinue
+    
+    
     Get-AppxProvisionedPackage -online |
         where-object {$_.packagename -notlike "*Microsoft.FreshPaint*"} |
         where-object {$_.packagename -notlike "*Microsoft.WindowsCalculator*"} |
         where-object {$_.name -notlike "*Microsoft.WindowsStore*"} |
         where-object {$_.name -notlike "*Microsoft.Windows.Photos*"} |
-        Remove-AppxProvisionedPackage -online -ErrorAction SilentlyContinue -Verbose    
+        Remove-AppxProvisionedPackage -online -ErrorAction SilentlyContinue
 }
+
 Function Remove-Keys {
 
     #These are the registry keys that it will delete.
@@ -88,8 +89,8 @@ Function Protect-Privacy {
         $Period2 = 'HKCU:\Software\Microsoft\Siuf\Rules'
         $Period3 = 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
         mkdir $Period1
-        mkdir $Period2
-        mkdir $Period3   
+        mkdir $Period2 
+        mkdir $Period3 
         New-ItemProperty $Period3 -Name PeriodInNanoSeconds -Value 0 -Verbose
     }
            
@@ -151,6 +152,14 @@ Function Protect-Privacy {
         mkdir 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'        
         $Live = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'
         New-ItemProperty $Live -Name NoTileApplicationNotification -Value 1 -Verbose
+
+        Write-Output "Disabling scheduled tasks"
+        Get-ScheduledTask -TaskName XblGameSaveTaskLogon | Disable-ScheduledTask
+        Get-ScheduledTask -TaskName XblGameSaveTask | Disable-ScheduledTask
+        Get-ScheduledTask -TaskName Consolidator | Disable-ScheduledTask
+        Get-ScheduledTask -TaskName UsbCeip | Disable-ScheduledTask
+        Get-ScheduledTask -TaskName DmClient | Disable-ScheduledTask
+        Get-ScheduledTask -TaskName DmClientOnScenarioDownload | Disable-ScheduledTask
     }
 }
 Function Revert-Changes {        
@@ -235,7 +244,7 @@ Function Revert-Changes {
     }
 
     Write-Output "Enabling live tiles"
-    If (!(Test-Path 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications')) {
+    If ('HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications') {
         mkdir 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'        
         $Live = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'
         New-ItemProperty $Live -Name NoTileApplicationNotification -Value 0 -Verbose
@@ -277,6 +286,14 @@ Function Revert-Changes {
     If ('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo') {
         $Advertising = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo'
         Set-ItemProperty $Advertising -Name Enabled -Value 1 -Verbose
+
+        Write-Output "Enabling scheduled tasks that were disabled"
+        Get-ScheduledTask -TaskName XblGameSaveTaskLogon | Enable-ScheduledTask
+        Get-ScheduledTask -TaskName XblGameSaveTask | Enable-ScheduledTask
+        Get-ScheduledTask -TaskName Consolidator | Enable-ScheduledTask
+        Get-ScheduledTask -TaskName UsbCeip | Enable-ScheduledTask
+        Get-ScheduledTask -TaskName DmClient | Enable-ScheduledTask
+        Get-ScheduledTask -TaskName DmClientOnScenarioDownload | Enable-ScheduledTask
     }
 }
     
