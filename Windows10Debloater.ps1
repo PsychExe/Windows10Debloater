@@ -340,7 +340,7 @@ Switch ($ReadHost) {
     
 #Switch statement containing Yes/No options
 Write-Output "Do you want to change some privacy settings? This will disable Cortana from acting within your Search, and disable feedback to Microsoft, as well as stop 
-Edge from being the default PDF viewer and disable some telemetry scheduled tasks."
+Edge from being the default PDF viewer and disabling scheduled tasks that are considered to be telemetry."
 $Readhost = Read-Host " ( Yes / No ) "
 Switch ($ReadHost) {
     Yes {
