@@ -37,6 +37,7 @@ Function Remove-Keys {
         "HKCR:\Extensions\ContractId\Windows.BackgroundTasks\PackageId\Microsoft.MicrosoftOfficeHub_17.7909.7600.0_x64__8wekyb3d8bbwe"
         "HKCR:\Extensions\ContractId\Windows.BackgroundTasks\PackageId\Microsoft.PPIProjection_10.0.15063.0_neutral_neutral_cw5n1h2txyewy"
         "HKCR:\Extensions\ContractId\Windows.BackgroundTasks\PackageId\Microsoft.XboxGameCallableUI_1000.15063.0.0_neutral_neutral_cw5n1h2txyewy"
+        "HKCR:\Extensions\ContractId\Windows.BackgroundTasks\PackageId\Microsoft.XboxGameCallableUI_1000.16299.15.0_neutral_neutral_cw5n1h2txyewy"
     
         #Windows File
         "HKCR:\Extensions\ContractId\Windows.File\PackageId\ActiproSoftwareLLC.562882FEEB491_2.6.18.18_neutral__24pqs290vpjk0"
@@ -46,6 +47,7 @@ Function Remove-Keys {
         "HKCR:\Extensions\ContractId\Windows.Launch\PackageId\ActiproSoftwareLLC.562882FEEB491_2.6.18.18_neutral__24pqs290vpjk0"
         "HKCR:\Extensions\ContractId\Windows.Launch\PackageId\Microsoft.PPIProjection_10.0.15063.0_neutral_neutral_cw5n1h2txyewy"
         "HKCR:\Extensions\ContractId\Windows.Launch\PackageId\Microsoft.XboxGameCallableUI_1000.15063.0.0_neutral_neutral_cw5n1h2txyewy"
+        "HKCR:\Extensions\ContractId\Windows.Launch\PackageId\Microsoft.XboxGameCallableUI_1000.16299.15.0_neutral_neutral_cw5n1h2txyewy"
     
         #Scheduled Tasks to delete
         "HKCR:\Extensions\ContractId\Windows.PreInstalledConfigTask\PackageId\Microsoft.MicrosoftOfficeHub_17.7909.7600.0_x64__8wekyb3d8bbwe"
@@ -54,6 +56,7 @@ Function Remove-Keys {
         "HKCR:\Extensions\ContractId\Windows.Protocol\PackageId\ActiproSoftwareLLC.562882FEEB491_2.6.18.18_neutral__24pqs290vpjk0"
         "HKCR:\Extensions\ContractId\Windows.Protocol\PackageId\Microsoft.PPIProjection_10.0.15063.0_neutral_neutral_cw5n1h2txyewy"
         "HKCR:\Extensions\ContractId\Windows.Protocol\PackageId\Microsoft.XboxGameCallableUI_1000.15063.0.0_neutral_neutral_cw5n1h2txyewy"
+        "HKCR:\Extensions\ContractId\Windows.Protocol\PackageId\Microsoft.XboxGameCallableUI_1000.16299.15.0_neutral_neutral_cw5n1h2txyewy"
        
         #Windows Share Target
         "HKCR:\Extensions\ContractId\Windows.ShareTarget\PackageId\ActiproSoftwareLLC.562882FEEB491_2.6.18.18_neutral__24pqs290vpjk0"
@@ -170,19 +173,19 @@ Function Revert-Changes {
     Get-AppxPackage -AllUsers | ForEach {Add-AppxPackage -Verbose -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"} -ErrorAction SilentlyContinue
 
 
-    #Disables Windows Feedback Experience
+    #Enables Windows Feedback Experience
     If (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo') {
         $Advertising = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo'
         Set-ItemProperty $Advertising -Name Enabled -Value 1 -Verbose
     }
     
-    #Stops Cortana from being used as part of your Windows Search Function
+    #Enables Cortana from being used as part of your Windows Search Function
     If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search') {
         $Search = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search'
         Set-ItemProperty $Search -Name AllowCortana -Value 1 -Verbose
     }
     
-    #Stops the Windows Feedback Experience from sending anonymous data
+    #Enables the Windows Feedback Experience from sending anonymous data
     If (!('HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds')) { 
         mkdir 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
         $Period = 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
@@ -192,15 +195,15 @@ Function Revert-Changes {
            
     Write-Output "Adding Registry key to prevent bloatware apps from returning"
            
-    #Prevents bloatware applications from returning
+    #Enables bloatware applications
     If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content') {
         $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content"
         Mkdir $registryPath
         New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 0 -Verbose
     }
            
-    Write-Output "Stopping Edge from taking over as the default .PDF viewer"
-    #Stops edge from taking over as the default .PDF viewer
+    Write-Output "Setting Edge back to default"
+    #Sets edge back to default
     If (Get-ItemProperty 'HKCR:\.pdf' -Name NoOpenWith) {
         $NoOpen = 'HKCR:\.pdf'
         Remove-ItemProperty $NoOpen -Name NoOpenWith -Verbose
@@ -249,37 +252,14 @@ Function Revert-Changes {
         $Live = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'
         New-ItemProperty $Live -Name NoTileApplicationNotification -Value 0 -Verbose
     }
-
-    #Stops Cortana from being used as part of your Windows Search Function
-    If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search') {
-        #Disables Cortana
-        $Search = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search'
-        Set-ItemProperty $Search -Name AllowCortana -Value 1 -Verbose
-    }
        
-    Write-Output "Adding Registry key to prevent bloatware apps from returning"
+    Write-Output "Changing the 'Cloud Content' registry key value to 1 to allow bloatware apps to reinstall"
        
     #Prevents bloatware applications from returning
     If ("HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content\") {
         $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content"
         Mkdir $registryPath
         New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 1 -Verbose
-    }
-       
-    Write-Output "Stopping Edge from taking over as the default .PDF viewer"
-       
-    If (!(Get-ItemProperty 'HKCR:\.pdf' -Name NoOpenWith)) {
-        #This is the .pdf file association string
-        $PDF = 'HKCR:\.pdf'
-        New-ItemProperty $PDF -Name NoOpenWith -Verbose
-        New-ItemProperty $PDF -Name NoStaticDefaultVerb -Verbose
-    }
-
-    If (!(Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoOpenWith)) {
-        #This is the .pdf file association string
-        $Progids = 'HKCR:\.pdf\OpenWithProgids'
-        New-ItemProperty $Progids -Name NoOpenWith -Verbose
-        New-ItemProperty $Progids -Name NoStaticDefaultVerb -Verbose
     }
 
     #Tells Windows to enable your advertising information.
