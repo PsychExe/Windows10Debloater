@@ -1,6 +1,3 @@
-#This utility removes all of the Windows 10 bloatware that is preinstalled. Use the # to comment
-#out a bloatware app that you would like to keep.
-
 #This function finds any AppX/AppXProvisioned package and uninstalls it, except for Freshpaint, Windows Calculator, Windows Store, and Windows Photos.
 #Also, to note - This does NOT remove essential system services/software/etc such as .NET framework installations, Cortana, Edge, etc.
 
@@ -326,6 +323,18 @@ Switch ($ReadHost) {
     Yes {
         Write-Output "Disabling Cortana from being active within Windows Search, disabling Feedback to Microsoft, and stopping Edge from taking over as the PDF viewer."; $PublishSettings = $true
         Protect-Privacy
+    }
+    No {$PublishSettings = $false}
+}
+
+#Switch statement asking if you'd like to reboot your machine
+Write-Output "For some of the changes to properly take effect it is recommended to reboot your machine. Would you like to restart?"
+$Readhost = Read-Host " ( Yes / No ) "
+Switch ($Readhost) {
+    Yes {
+        Write-Output "Initiating reboot."; $PublishSettings = $true
+        Sleep 2
+        Restart-Computer
     }
     No {$PublishSettings = $false}
 }
