@@ -16,3 +16,11 @@ This comes in hand when setting up new Windows 10 machines without needing to ma
 Download the Windows10Debloater.ps1 file. Next, copy the source code from Windows10Debloater.ps1 and throw it into PowerShell ISE or launch it with PowerShell as Administrator and click run.
 
 Alternatively, you can download the Windows10Debloater.exe file and right click it and run it as administrator. This runs the same *exact* code as in the .ps1 file.
+
+# Concerns over verbose output
+
+This script does NOT remove anything related to the .NET framework, or any OS dependencies. When you run it, you may see some stuff that was targeted to be removed such as .NET, but that isn't the case.
+
+The script just whitelists specific apps to not remove, such as the Store and Calculator, along with 2 others, and removes anything else that it deems an AppxPackage/AppxProvisionedPackage.
+
+I added -ErrorAction SilentlyContinue -Verbose at the end of each Remove-AppxPackage/Remove-AppxProvisionedPackage so that the screen does not fill up with exceptions.
