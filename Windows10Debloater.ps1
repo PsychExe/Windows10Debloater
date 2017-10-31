@@ -300,31 +300,22 @@ Switch ($ReadHost) {
     
 #Switch statement containing Debloat/Revert options
 Write-Output "The following options will allow you to either Debloat Windows 10, or to revert changes made after Debloating Windows 10.
-    Choose 'Debloat' to Debloat Windows 10 or choose 'Revert' to revert changes." 
+Choose 'Debloat' to Debloat Windows 10 or choose 'Revert' to revert changes." 
 $Readhost = Read-Host " ( Debloat / Revert ) " 
 Switch ($ReadHost) {
     #This will debloat Windows 10
     Debloat {
-        Write-Output "Starting Debloat. Uninstalling bloatware and removing the registry keys."; $PublishSettings = $true
+        Write-Output "Uninstalling bloatware."
         Start-Debloat
+        Write-Output "Removing leftover bloatware registry keys."
         Remove-Keys
+        Write-Output "Disabling Cortana from search, disabling feedback to Microsoft, stopping Edge from taking over as the PDF viewer, and disabling scheduled tasks that are considered to be telemetry or unnecessary."
+        Protect-Privacy; $PublishSettings = $true
     }
     Revert {
         Write-Output "Reverting changes..."; $PublishSettings = $false
         Revert-Changes
     }
-}
-    
-#Switch statement containing Yes/No options
-Write-Output "Do you want to change some privacy settings? This will disable Cortana from acting within your Search, and disable feedback to Microsoft, as well as stop 
-Edge from being the default PDF viewer and disabling scheduled tasks that are considered to be telemetry."
-$Readhost = Read-Host " ( Yes / No ) "
-Switch ($ReadHost) {
-    Yes {
-        Write-Output "Disabling Cortana from being active within Windows Search, disabling Feedback to Microsoft, and stopping Edge from taking over as the PDF viewer."; $PublishSettings = $true
-        Protect-Privacy
-    }
-    No {$PublishSettings = $false}
 }
 
 #Switch statement asking if you'd like to reboot your machine
