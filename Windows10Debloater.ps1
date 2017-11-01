@@ -3,6 +3,10 @@
 
 Function Start-Debloat {
 
+    [CmdletBinding()]
+    
+        Param()
+
     Get-AppxPackage -AllUsers |
         where-object {$_.name -notlike "*Microsoft.FreshPaint*"} |
         where-object {$_.name -notlike "*Microsoft.WindowsCalculator*"} |
@@ -20,6 +24,10 @@ Function Start-Debloat {
 }
 
 Function Remove-Keys {
+
+    [CmdletBinding()]
+    
+        Param()
 
     #These are the registry keys that it will delete.
 
@@ -66,6 +74,10 @@ Function Remove-Keys {
 }
     
 Function Protect-Privacy {
+
+    [CmdletBinding()]
+
+    Param()
 
     #Creates a "drive" to access the HKCR (HKEY_CLASSES_ROOT)
     New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT
@@ -162,13 +174,16 @@ Function Protect-Privacy {
         Get-ScheduledTask -TaskName DmClientOnScenarioDownload | Disable-ScheduledTask
     }
 }
-Function Revert-Changes {        
+Function Revert-Changes {   
+    
+    [CmdletBinding()]
+    
+        Param()
 
     #This function will revert the changes you made when running the Start-Debloat function.
 
     #This line reinstalls all of the bloatware that was removed
     Get-AppxPackage -AllUsers | ForEach {Add-AppxPackage -Verbose -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"} -ErrorAction SilentlyContinue
-
 
     #Enables Windows Feedback Experience
     If (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo') {
@@ -305,12 +320,18 @@ $Readhost = Read-Host " ( Debloat / Revert ) "
 Switch ($ReadHost) {
     #This will debloat Windows 10
     Debloat {
-        Write-Output "Uninstalling bloatware."
+        Write-Output "Uninstalling bloatware, please wait."
         Start-Debloat
-        Write-Output "Removing leftover bloatware registry keys."
+        Write-Output "Bloatware removed."
+        Sleep 1
+        Write-Output "Removing specific registry keys."
         Remove-Keys
+        Write-Output "Leftover bloatware registry keys removed."
+        Sleep 1
         Write-Output "Disabling Cortana from search, disabling feedback to Microsoft, stopping Edge from taking over as the PDF viewer, and disabling scheduled tasks that are considered to be telemetry or unnecessary."
-        Protect-Privacy; $PublishSettings = $true
+        Protect-Privacy
+        Write-Output "Cortana disbaled from search, feedback to Microsoft has been disabled, Edge should no longer take over as the PDF viewer, and scheduled tasks are disabled."
+        Sleep 1; $PublishSettings = $true
     }
     Revert {
         Write-Output "Reverting changes..."; $PublishSettings = $false
