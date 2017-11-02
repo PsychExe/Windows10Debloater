@@ -7,6 +7,7 @@ Function Start-Debloat {
         
     Param()
     
+    #Removes AppxPackages
     Get-AppxPackage -AllUsers |
         where-object {$_.name -notlike "*Microsoft.FreshPaint*"} |
         where-object {$_.name -notlike "*Microsoft.WindowsCalculator*"} |
@@ -14,7 +15,7 @@ Function Start-Debloat {
         where-object {$_.name -notlike "*Microsoft.Windows.Photos*"} |
         Remove-AppxPackage -ErrorAction SilentlyContinue
         
-        
+    #Removes AppxProvisionedPackages
     Get-AppxProvisionedPackage -online |
         where-object {$_.packagename -notlike "*Microsoft.FreshPaint*"} |
         where-object {$_.packagename -notlike "*Microsoft.WindowsCalculator*"} |
@@ -22,7 +23,6 @@ Function Start-Debloat {
         where-object {$_.name -notlike "*Microsoft.Windows.Photos*"} |
         Remove-AppxProvisionedPackage -online -ErrorAction SilentlyContinue
 }
-    
 Function Remove-Keys {
     
     [CmdletBinding()]
@@ -63,7 +63,8 @@ Function Remove-Keys {
         #Windows Share Target
         "HKCR:\Extensions\ContractId\Windows.ShareTarget\PackageId\ActiproSoftwareLLC.562882FEEB491_2.6.18.18_neutral__24pqs290vpjk0"
     )
-        
+    
+    #This writes the output of each key it is removing and also removes the keys listed above.
     ForEach ($Key in $Keys) {
         Write-Output "Removing $Key from registry"
         Remove-Item $Key -Recurse -ErrorAction SilentlyContinue
@@ -77,18 +78,21 @@ Function Protect-Privacy {
     Param()
         
     #Disables Windows Feedback Experience
+    Write-Output "Disabling Windows Feedback Experience program"
     If (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo') {
         $Advertising = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo'
         Set-ItemProperty $Advertising -Name Enabled -Value 0 -Verbose
     }
         
     #Stops Cortana from being used as part of your Windows Search Function
+    Write-Output "Stopping Cortana from being used as part of your Windows Search Function"
     If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search') {
         $Search = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search'
         Set-ItemProperty $Search -Name AllowCortana -Value 0 -Verbose
     }
         
     #Stops the Windows Feedback Experience from sending anonymous data
+    Write-Output "Stopping the Windows Feedback Experience program"
     If ('HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds') { 
         $Period1 = 'HKCU:\Software\Microsoft\Siuf'
         $Period2 = 'HKCU:\Software\Microsoft\Siuf\Rules'
@@ -96,18 +100,16 @@ Function Protect-Privacy {
         mkdir $Period1 -ErrorAction SilentlyContinue
         mkdir $Period2 -ErrorAction SilentlyContinue
         mkdir $Period3 -ErrorAction SilentlyContinue
-        New-ItemProperty $Period3 -Name PeriodInNanoSeconds -Value 0 -Verbose
+        New-ItemProperty $Period3 -Name PeriodInNanoSeconds -Value 0 -Verbose -ErrorAction SilentlyContinue
     }
                
     Write-Output "Adding Registry key to prevent bloatware apps from returning"
-               
     #Prevents bloatware applications from returning
     If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content') {
         $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content"
         Mkdir $registryPath -ErrorAction SilentlyContinue
-        New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 1 -Verbose
-    }
-               
+        New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 1 -Verbose -ErrorAction SilentlyContinue
+    }          
     
     Write-Output "Setting Mixed Reality Portal value to 0 so that you can uninstall it in Settings"
     If ('HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic') {
@@ -115,6 +117,7 @@ Function Protect-Privacy {
         Set-ItemProperty $Holo -Name FirstRunSucceeded -Value 0 -Verbose
     }
     
+    #Disables live tiles
     Write-Output "Disabling live tiles"
     If (!(Test-Path 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications')) {
         mkdir 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications' -ErrorAction SilentlyContinue     
@@ -122,11 +125,13 @@ Function Protect-Privacy {
         New-ItemProperty $Live -Name NoTileApplicationNotification -Value 1 -Verbose
     }
     
+    #Turns off Data Collection via the AllowTelemtry key by changing it to 0
     If ('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection') {
         $DataCollection = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection'
         Set-ItemProperty $DataCollection -Name AllowTelemetry -Value 0 -Verbose
     }
     
+    #Disables People icon on Taskbar
     Write-Output "Disabling People icon on Taskbar"
     If (!(Test-Path 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People')) {
         mkdir 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People' -ErrorAction SilentlyContinue
@@ -134,6 +139,7 @@ Function Protect-Privacy {
         New-ItemProperty $People -Name PeopleBand -Value 0 -Verbose
     }
     
+    #Disables scheduled tasks that are considered unnecessary 
     Write-Output "Disabling scheduled tasks"
     Get-ScheduledTask -TaskName XblGameSaveTaskLogon | Disable-ScheduledTask
     Get-ScheduledTask -TaskName XblGameSaveTask | Disable-ScheduledTask
@@ -149,32 +155,32 @@ Function Stop-EdgePDF {
     #Stops edge from taking over as the default .PDF viewer
     If (!(Get-ItemProperty 'HKCR:\.pdf' -Name NoOpenWith)) {
         $NoOpen = 'HKCR:\.pdf'
-        New-ItemProperty $NoOpen -Name NoOpenWith -Verbose
+        New-ItemProperty $NoOpen -Name NoOpenWith -Verbose -ErrorAction SilentlyContinue
     }
     
     If (!(Get-ItemProperty 'HKCR:\.pdf' -Name NoStaticDefaultVerb)) {
         $NoStatic = 'HKCR:\.pdf'
-        New-ItemProperty $NoStatic -Name NoStaticDefaultVerb
+        New-ItemProperty $NoStatic -Name NoStaticDefaultVerb -Verbose -ErrorAction SilentlyContinue
     }
     
     If (!(Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoOpenWith)) {
         $NoOpen = 'HKCR:\.pdf\OpenWithProgids'
-        New-ItemProperty $NoOpen -Name NoOpenWith -Verbose
+        New-ItemProperty $NoOpen -Name NoOpenWith -Verbose -ErrorAction SilentlyContinue
     }
     
     If (!(Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoStaticDefaultVerb)) {
         $NoStatic = 'HKCR:\.pdf\OpenWithProgids'
-        New-ItemProperty $NoStatic -Name NoStaticDefaultVerb
+        New-ItemProperty $NoStatic -Name NoStaticDefaultVerb -Verbose -ErrorAction SilentlyContinue
     }
     
     If (!(Get-ItemProperty 'HKCR:\.pdf\OpenWithList' -Name NoOpenWith)) {
         $NoOpen = 'HKCR:\.pdf\OpenWithList'
-        New-ItemProperty $NoOpen -Name NoOpenWith -Verbose
+        New-ItemProperty $NoOpen -Name NoOpenWith -Verbose -ErrorAction SilentlyContinue
     }
     
     If (!(Get-ItemProperty 'HKCR:\.pdf\OpenWithList' -Name NoStaticDefaultVerb)) {
         $NoStatic = 'HKCR:\.pdf\OpenWithList'
-        New-ItemProperty $NoStatic -Name NoStaticDefaultVerb
+        New-ItemProperty $NoStatic -Name NoStaticDefaultVerb -Verbose -ErrorAction SilentlyContinue
     }
     
     #Appends an underscore '_' to the Registry key for Edge
@@ -194,19 +200,22 @@ Function Revert-Changes {
     #This line reinstalls all of the bloatware that was removed
     Get-AppxPackage -AllUsers | ForEach {Add-AppxPackage -Verbose -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"} -ErrorAction SilentlyContinue
     
-    #Enables Windows Feedback Experience
-    If (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo') {
+    Write-Output "Re-enabling key to show advertisement information"
+    #Tells Windows to enable your advertising information.
+    If ('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo') {
         $Advertising = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo'
         Set-ItemProperty $Advertising -Name Enabled -Value 1 -Verbose
     }
         
-    #Enables Cortana from being used as part of your Windows Search Function
+    #Enables Cortana to be used as part of your Windows Search Function
+    Write-Output "Re-enabling Cortana to be used in your Windows Search"
     If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search') {
         $Search = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search'
         Set-ItemProperty $Search -Name AllowCortana -Value 1 -Verbose
     }
         
-    #Enables the Windows Feedback Experience from sending anonymous data
+    #Re-enables the Windows Feedback Experience for sending anonymous data
+    Write-Output "Re-enabling Windows Feedback Experience"
     If (!('HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds')) { 
         mkdir 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
         $Period = 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
@@ -219,7 +228,7 @@ Function Revert-Changes {
     If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content') {
         $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content"
         Mkdir $registryPath -ErrorAction SilentlyContinue
-        New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 0 -Verbose
+        New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 0 -Verbose -ErrorAction SilentlyContinue
     }
                
     Write-Output "Setting Edge back to default"
@@ -231,7 +240,7 @@ Function Revert-Changes {
     
     If (Get-ItemProperty 'HKCR:\.pdf' -Name NoStaticDefaultVerb) {
         $NoStatic = 'HKCR:\.pdf'
-        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb
+        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb -Verbose
     }
     
     If (Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoOpenWith) {
@@ -241,7 +250,7 @@ Function Revert-Changes {
     
     If (Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoStaticDefaultVerb) {
         $NoStatic = 'HKCR:\.pdf\OpenWithProgids'
-        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb
+        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb -Verbose
     }
     
     If (Get-ItemProperty 'HKCR:\.pdf\OpenWithList' -Name NoOpenWith) {
@@ -251,7 +260,7 @@ Function Revert-Changes {
     
     If (Get-ItemProperty 'HKCR:\.pdf\OpenWithList' -Name NoStaticDefaultVerb) {
         $NoStatic = 'HKCR:\.pdf\OpenWithList'
-        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb
+        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb -Verbose
     }
     
     #Removes an underscore '_' from the Registry key for Edge
@@ -260,45 +269,44 @@ Function Revert-Changes {
         Set-Item $Edge AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723 -Verbose
     }
     
+    #Changes Mixed Reality Portal Key 'FirstRunSucceeded' to 1
     Write-Output "Setting Mixed Reality Portal value to 1"
     If ('HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic') {
         $Holo = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic'
         Set-ItemProperty $Holo -Name FirstRunSucceeded -Value 1 -Verbose
     }
     
+    #Re-enables live tiles
     Write-Output "Enabling live tiles"
     If ('HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications') {
-        mkdir 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'        
+        mkdir 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications' -ErrorAction SilentlyContinue       
         $Live = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'
-        New-ItemProperty $Live -Name NoTileApplicationNotification -Value 0 -Verbose
+        New-ItemProperty $Live -Name NoTileApplicationNotification -Value 0 -Verbose -ErrorAction SilentlyContinue
     }
            
     Write-Output "Changing the 'Cloud Content' registry key value to 1 to allow bloatware apps to reinstall"
-           
     #Prevents bloatware applications from returning
     If ("HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content\") {
         $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content"
-        Mkdir $registryPath
-        New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 1 -Verbose
+        Mkdir $registryPath -ErrorAction SilentlyContinue
+        New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 1 -Verbose -ErrorAction SilentlyContinue
     }
     
-    #Tells Windows to enable your advertising information.
-    If ('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo') {
-        $Advertising = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo'
-        Set-ItemProperty $Advertising -Name Enabled -Value 1 -Verbose
-    }
-    
+    #Re-enables data collection
+    Write-Output "Re-enabling data collection"
     If ('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection') {
         $DataCollection = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection'
         Set-ItemProperty $DataCollection -Name AllowTelemetry -Value 1 -Verbose
     }
     
+    #Re-enables People Icon on Taskbar
     Write-Output "Enabling People icon on Taskbar"
     If ('HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People') {
         $People = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People'
-        New-ItemProperty $People -Name PeopleBand -Value 1 -Verbose
+        New-ItemProperty $People -Name PeopleBand -Value 1 -Verbose -ErrorAction SilentlyContinue
     }
     
+    #Re-enables scheduled tasks that were disabled when running the Debloat switch
     Write-Output "Enabling scheduled tasks that were disabled"
     Get-ScheduledTask -TaskName XblGameSaveTaskLogon | Enable-ScheduledTask
     Get-ScheduledTask -TaskName XblGameSaveTask | Enable-ScheduledTask
