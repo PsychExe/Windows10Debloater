@@ -351,15 +351,16 @@ Switch ($ReadHost) {
         Remove-Keys
         Write-Output "Leftover bloatware registry keys removed."
         Sleep 1
-        Write-Output "Disabling Cortana from search, disabling feedback to Microsoft, stopping Edge from taking over as the PDF viewer, and disabling scheduled tasks that are considered to be telemetry or unnecessary."
+        Write-Output "Disabling Cortana from search, disabling feedback to Microsoft, and disabling scheduled tasks that are considered to be telemetry or unnecessary."
         Protect-Privacy
-        Write-Output "Cortana disbaled from search, feedback to Microsoft has been disabled, Edge should no longer take over as the PDF viewer, and scheduled tasks are disabled."
+        Write-Output "Cortana disbaled from search, feedback to Microsoft has been disabled, and scheduled tasks are disabled."
         Sleep 1; $PublishSettings = $true
         Write-Output "Do you want to stop edge from taking over as the default PDF viewer?"
         $ReadHost = Read-Host " (Yes / No ) "
         Switch ($ReadHost) {
             Yes {
-                Stop-EdgePDF; $PublishSettings = $true
+                Stop-EdgePDF
+                Write-Output "Edge will no longer take over as the default PDF viewer."; $PublishSettings = $true
             }
             No {$PublishSettings = $false}
         }
