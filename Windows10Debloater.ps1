@@ -5,7 +5,7 @@ Function Start-Debloat {
 
     [CmdletBinding()]
     
-        Param()
+    Param()
 
     Get-AppxPackage -AllUsers |
         where-object {$_.name -notlike "*Microsoft.FreshPaint*"} |
@@ -20,14 +20,14 @@ Function Start-Debloat {
         where-object {$_.packagename -notlike "*Microsoft.WindowsCalculator*"} |
         where-object {$_.name -notlike "*Microsoft.WindowsStore*"} |
         where-object {$_.name -notlike "*Microsoft.Windows.Photos*"} |
-        Remove-AppxProvisionedPackage -online -ErrorAction SilentlyContinue
+        Remove-AppxProvisionedPackage -online -ErrorAction SilentlyContinue | Tee-Object C:\Windows10Debloater.txt
 }
 
 Function Remove-Keys {
 
     [CmdletBinding()]
     
-        Param()
+    Param()
 
     #These are the registry keys that it will delete.
 
@@ -164,6 +164,12 @@ Function Protect-Privacy {
         mkdir 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'        
         $Live = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'
         New-ItemProperty $Live -Name NoTileApplicationNotification -Value 1 -Verbose
+    }
+
+    If ('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection') {
+        $DataCollection = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection'
+        Set-ItemProperty $DataCollection -Name AllowTelemetry -Value 0 -Verbose
+    }
 
         Write-Output "Disabling scheduled tasks"
         Get-ScheduledTask -TaskName XblGameSaveTaskLogon | Disable-ScheduledTask
@@ -172,13 +178,13 @@ Function Protect-Privacy {
         Get-ScheduledTask -TaskName UsbCeip | Disable-ScheduledTask
         Get-ScheduledTask -TaskName DmClient | Disable-ScheduledTask
         Get-ScheduledTask -TaskName DmClientOnScenarioDownload | Disable-ScheduledTask
-    }
 }
+
 Function Revert-Changes {   
     
     [CmdletBinding()]
     
-        Param()
+    Param()
 
     #This function will revert the changes you made when running the Start-Debloat function.
 
@@ -278,6 +284,11 @@ Function Revert-Changes {
     If ('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo') {
         $Advertising = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo'
         Set-ItemProperty $Advertising -Name Enabled -Value 1 -Verbose
+
+        If ('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection') {
+            $DataCollection = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection'
+            Set-ItemProperty $DataCollection -Name AllowTelemetry -Value 1 -Verbose
+        }
 
         Write-Output "Enabling scheduled tasks that were disabled"
         Get-ScheduledTask -TaskName XblGameSaveTaskLogon | Enable-ScheduledTask
