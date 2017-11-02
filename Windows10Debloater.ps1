@@ -20,7 +20,7 @@ Function Start-Debloat {
         where-object {$_.packagename -notlike "*Microsoft.WindowsCalculator*"} |
         where-object {$_.name -notlike "*Microsoft.WindowsStore*"} |
         where-object {$_.name -notlike "*Microsoft.Windows.Photos*"} |
-        Remove-AppxProvisionedPackage -online -ErrorAction SilentlyContinue | Tee-Object C:\Windows10Debloater.txt
+        Remove-AppxProvisionedPackage -online -ErrorAction SilentlyContinue
 }
     
 Function Remove-Keys {
@@ -117,7 +117,7 @@ Function Protect-Privacy {
     
     Write-Output "Disabling live tiles"
     If (!(Test-Path 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications')) {
-        mkdir 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'        
+        mkdir 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications' -ErrorAction SilentlyContinue     
         $Live = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications'
         New-ItemProperty $Live -Name NoTileApplicationNotification -Value 1 -Verbose
     }
@@ -129,7 +129,7 @@ Function Protect-Privacy {
     
     Write-Output "Disabling People icon on Taskbar"
     If (!(Test-Path 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People')) {
-        mkdir 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People'
+        mkdir 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People' -ErrorAction SilentlyContinue
         $People = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People'
         New-ItemProperty $People -Name PeopleBand -Value 0 -Verbose
     }
@@ -210,7 +210,7 @@ Function Revert-Changes {
     If (!('HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds')) { 
         mkdir 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
         $Period = 'HKCU:\Software\Microsoft\Siuf\Rules\PeriodInNanoSeconds'
-        New-Item $Period
+        New-Item $Period -ErrorAction SilentlyContinue
         Set-ItemProperty -Name PeriodInNanoSeconds -Value 1 -Verbose
     }
                
@@ -218,7 +218,7 @@ Function Revert-Changes {
     #Enables bloatware applications
     If ('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content') {
         $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Cloud Content"
-        Mkdir $registryPath
+        Mkdir $registryPath -ErrorAction SilentlyContinue
         New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 0 -Verbose
     }
                
@@ -413,9 +413,5 @@ Switch ($ReadHost) {
                 Exit; $PublishSettings = $false
             }
         }
-    } 
+    }
 }
-    
-
-    
-    
