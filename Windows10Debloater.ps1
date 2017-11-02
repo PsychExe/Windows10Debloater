@@ -363,31 +363,59 @@ Switch ($ReadHost) {
             }
             No {$PublishSettings = $false}
         }
+        #Switch statement asking if you'd like to reboot your machine
+        Write-Output "For some of the changes to properly take effect it is recommended to reboot your machine. Would you like to restart?"
+        $Readhost = Read-Host " ( Yes / No ) "
+        Switch ($Readhost) {
+            Yes {
+                Write-Output "Unloading the HKCR drive..."
+                Remove-PSDrive HKCR 
+                Sleep 1
+                Write-Output "Initiating reboot."; $PublishSettings = $true
+                Sleep 2
+                Restart-Computer
+            }
+            No {
+                Write-Output "Unloading the HKCR drive..."
+                Remove-PSDrive HKCR 
+                Sleep 1
+                Write-Output "Script has finished. Exiting."
+                Sleep 2
+                Exit; $PublishSettings = $false
+            }
+        }
+
     }
     Revert {
         Write-Output "Reverting changes..."; $PublishSettings = $false
+        Write-Output "Creating PSDrive 'HKCR' (HKEY_CLASSES_ROOT). This will be used for the duration of the script as it is necessary for the modification of specific registry keys."
+        New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT
         Revert-Changes
-    }
+
+        #Switch statement asking if you'd like to reboot your machine
+        Write-Output "For some of the changes to properly take effect it is recommended to reboot your machine. Would you like to restart?"
+        $Readhost = Read-Host " ( Yes / No ) "
+        Switch ($Readhost) {
+            Yes {
+                Write-Output "Unloading the HKCR drive..."
+                Remove-PSDrive HKCR 
+                Sleep 1
+                Write-Output "Initiating reboot."; $PublishSettings = $true
+                Sleep 2
+                Restart-Computer
+            }
+            No {
+                Write-Output "Unloading the HKCR drive..."
+                Remove-PSDrive HKCR 
+                Sleep 1
+                Write-Output "Script has finished. Exiting."
+                Sleep 2
+                Exit; $PublishSettings = $false
+            }
+        }
+    } 
 }
     
-#Switch statement asking if you'd like to reboot your machine
-Write-Output "For some of the changes to properly take effect it is recommended to reboot your machine. Would you like to restart?"
-$Readhost = Read-Host " ( Yes / No ) "
-Switch ($Readhost) {
-    Yes {
-        Write-Output "Unloading the HKCR drive..."
-        Remove-PSDrive HKCR 
-        Sleep 1
-        Write-Output "Initiating reboot."; $PublishSettings = $true
-        Sleep 2
-        Restart-Computer
-    }
-    No {
-        Write-Output "Unloading the HKCR drive..."
-        Remove-PSDrive HKCR 
-        Sleep 1
-        Write-Output "Script has finished. Exiting."
-        Sleep 2
-        Exit; $PublishSettings = $false
-    }
-}
+
+    
+    
