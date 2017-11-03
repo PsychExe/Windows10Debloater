@@ -138,6 +138,13 @@ Function Protect-Privacy {
         $People = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People'
         New-ItemProperty $People -Name PeopleBand -Value 0 -Verbose
     }
+
+    #Disables suggestions on start menu
+    Write-Output "Disabling suggestions on the Start Menu"
+    If ('HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager') {
+        $Suggestions = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+        Set-ItemProperty $Suggestions -Name SystemPaneSuggestionsEnabled -Value 0 Verbose
+    }
     
     #Disables scheduled tasks that are considered unnecessary 
     Write-Output "Disabling scheduled tasks"
@@ -230,44 +237,6 @@ Function Revert-Changes {
         Mkdir $registryPath -ErrorAction SilentlyContinue
         New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 0 -Verbose -ErrorAction SilentlyContinue
     }
-               
-    Write-Output "Setting Edge back to default"
-    #Sets edge back to default
-    If (Get-ItemProperty 'HKCR:\.pdf' -Name NoOpenWith) {
-        $NoOpen = 'HKCR:\.pdf'
-        Remove-ItemProperty $NoOpen -Name NoOpenWith -Verbose
-    }
-    
-    If (Get-ItemProperty 'HKCR:\.pdf' -Name NoStaticDefaultVerb) {
-        $NoStatic = 'HKCR:\.pdf'
-        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb -Verbose
-    }
-    
-    If (Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoOpenWith) {
-        $NoOpen = 'HKCR:\.pdf\OpenWithProgids'
-        Remove-ItemProperty $NoOpen -Name NoOpenWith -Verbose
-    }
-    
-    If (Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoStaticDefaultVerb) {
-        $NoStatic = 'HKCR:\.pdf\OpenWithProgids'
-        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb -Verbose
-    }
-    
-    If (Get-ItemProperty 'HKCR:\.pdf\OpenWithList' -Name NoOpenWith) {
-        $NoOpen = 'HKCR:\.pdf\OpenWithList'
-        Remove-ItemProperty $NoOpen -Name NoOpenWith -Verbose
-    }
-    
-    If (Get-ItemProperty 'HKCR:\.pdf\OpenWithList' -Name NoStaticDefaultVerb) {
-        $NoStatic = 'HKCR:\.pdf\OpenWithList'
-        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb -Verbose
-    }
-    
-    #Removes an underscore '_' from the Registry key for Edge
-    If ('HKCR:\AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723') {
-        $Edge = 'HKCR:\AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723'
-        Set-Item $Edge AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723 -Verbose
-    }
     
     #Changes Mixed Reality Portal Key 'FirstRunSucceeded' to 1
     Write-Output "Setting Mixed Reality Portal value to 1"
@@ -305,6 +274,13 @@ Function Revert-Changes {
         $People = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People'
         New-ItemProperty $People -Name PeopleBand -Value 1 -Verbose -ErrorAction SilentlyContinue
     }
+
+    #Re-enables suggestions on start menu
+    Write-Output "Enabling suggestions on the Start Menu"
+    If ('HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager') {
+        $Suggestions = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+        Set-ItemProperty $Suggestions -Name SystemPaneSuggestionsEnabled -Value 1 Verbose
+    }
     
     #Re-enables scheduled tasks that were disabled when running the Debloat switch
     Write-Output "Enabling scheduled tasks that were disabled"
@@ -314,6 +290,46 @@ Function Revert-Changes {
     Get-ScheduledTask -TaskName UsbCeip | Enable-ScheduledTask
     Get-ScheduledTask -TaskName DmClient | Enable-ScheduledTask
     Get-ScheduledTask -TaskName DmClientOnScenarioDownload | Enable-ScheduledTask
+}
+
+Function Enable-EdgePDF {
+    Write-Output "Setting Edge back to default"
+    #Sets edge back to default
+    If (Get-ItemProperty 'HKCR:\.pdf' -Name NoOpenWith) {
+        $NoOpen = 'HKCR:\.pdf'
+        Remove-ItemProperty $NoOpen -Name NoOpenWith -Verbose
+    }
+    
+    If (Get-ItemProperty 'HKCR:\.pdf' -Name NoStaticDefaultVerb) {
+        $NoStatic = 'HKCR:\.pdf'
+        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb -Verbose
+    }
+    
+    If (Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoOpenWith) {
+        $NoOpen = 'HKCR:\.pdf\OpenWithProgids'
+        Remove-ItemProperty $NoOpen -Name NoOpenWith -Verbose
+    }
+    
+    If (Get-ItemProperty 'HKCR:\.pdf\OpenWithProgids' -Name NoStaticDefaultVerb) {
+        $NoStatic = 'HKCR:\.pdf\OpenWithProgids'
+        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb -Verbose
+    }
+    
+    If (Get-ItemProperty 'HKCR:\.pdf\OpenWithList' -Name NoOpenWith) {
+        $NoOpen = 'HKCR:\.pdf\OpenWithList'
+        Remove-ItemProperty $NoOpen -Name NoOpenWith -Verbose
+    }
+    
+    If (Get-ItemProperty 'HKCR:\.pdf\OpenWithList' -Name NoStaticDefaultVerb) {
+        $NoStatic = 'HKCR:\.pdf\OpenWithList'
+        Remove-ItemProperty $NoStatic -Name NoStaticDefaultVerb -Verbose
+    }
+    
+    #Removes an underscore '_' from the Registry key for Edge
+    If ('HKCR:\AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723') {
+        $Edge = 'HKCR:\AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723'
+        Set-Item $Edge AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723 -Verbose
+    }
 }
         
 #Switch statement containing Yes/No options
@@ -363,6 +379,7 @@ Switch ($ReadHost) {
         Protect-Privacy
         Write-Output "Cortana disbaled from search, feedback to Microsoft has been disabled, and scheduled tasks are disabled."
         Sleep 1; $PublishSettings = $true
+
         Write-Output "Do you want to stop edge from taking over as the default PDF viewer?"
         $ReadHost = Read-Host " (Yes / No ) "
         Switch ($ReadHost) {
@@ -393,13 +410,22 @@ Switch ($ReadHost) {
                 Exit; $PublishSettings = $false
             }
         }
-
     }
     Revert {
         Write-Output "Reverting changes..."; $PublishSettings = $false
         Write-Output "Creating PSDrive 'HKCR' (HKEY_CLASSES_ROOT). This will be used for the duration of the script as it is necessary for the modification of specific registry keys."
         New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT
         Revert-Changes
+        
+        Write-Output "Do you want to revert changes that disabled Edge as the default PDF viewer?"
+        $ReadHost = Read-Host " (Yes / No ) "
+        Switch ($ReadHost) {
+            Yes {
+                Enable-EdgePDF
+                Write-Output "Edge will no longer be disabled from being used as the default Edge PDF viewer."; $PublishSettings = $true
+            }
+            No {$PublishSettings = $false}
+        }
 
         #Switch statement asking if you'd like to reboot your machine
         Write-Output "For some of the changes to properly take effect it is recommended to reboot your machine. Would you like to restart?"
@@ -424,3 +450,7 @@ Switch ($ReadHost) {
         }
     }
 }
+    
+
+    
+    
