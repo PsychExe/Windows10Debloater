@@ -8,19 +8,19 @@ Function Start-Debloat {
     Param()
     
     #Removes AppxPackages
-    Get-AppxPackage -AllUsers |
-        where-object {$_.name -notlike "*Microsoft.FreshPaint*"} |
-        where-object {$_.name -notlike "*Microsoft.WindowsCalculator*"} |
-        where-object {$_.name -notlike "*Microsoft.WindowsStore*"} |
-        where-object {$_.name -notlike "*Microsoft.Windows.Photos*"} |
-        Remove-AppxPackage -ErrorAction SilentlyContinue
+    Get-AppxPackage -AllUsers | 
+        Where-Object {$_.AppxPackage -notlike "*Microsoft.FreshPaint*"} | 
+        Where-Object {$_.AppxPackage -notlike "*Microsoft.WindowsCalculator*"} |
+        Where-Object {$_.AppxPackage -notlike "*Microsoft.WindowsStore*"} | 
+        Where-Object {$_.AppxPackage -notlike "*Microsoft.Windows.Photos*"} |
+        Remove-AppxPackage -ErrorAction SilentlyContinue 
         
     #Removes AppxProvisionedPackages
     Get-AppxProvisionedPackage -online |
-        where-object {$_.packagename -notlike "*Microsoft.FreshPaint*"} |
-        where-object {$_.packagename -notlike "*Microsoft.WindowsCalculator*"} |
-        where-object {$_.name -notlike "*Microsoft.WindowsStore*"} |
-        where-object {$_.name -notlike "*Microsoft.Windows.Photos*"} |
+        Where-Object {$_.AppxProvisionedPackage -notlike "*Microsoft.FreshPaint*"} |
+        Where-Object {$_.AppxProvisionedPackage -notlike "*Microsoft.WindowsCalculator*"} |
+        Where-Object {$_.AppxProvisionedPackage -notlike "*Microsoft.WindowsStore*"} |
+        Where-Object {$_.AppxProvisionedPackage -notlike "*Microsoft.Windows.Photos*"} |
         Remove-AppxProvisionedPackage -online -ErrorAction SilentlyContinue
 }
 Function Remove-Keys {
@@ -279,7 +279,7 @@ Function Revert-Changes {
     Write-Output "Enabling suggestions on the Start Menu"
     If ('HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager') {
         $Suggestions = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
-        Set-ItemProperty $Suggestions -Name SystemPaneSuggestionsEnabled -Value 1 Verbose
+        Set-ItemProperty $Suggestions -Name SystemPaneSuggestionsEnabled -Value 1 -Verbose
     }
     
     #Re-enables scheduled tasks that were disabled when running the Debloat switch
@@ -410,6 +410,7 @@ Switch ($ReadHost) {
                 Exit; $PublishSettings = $false
             }
         }
+
     }
     Revert {
         Write-Output "Reverting changes..."; $PublishSettings = $false
