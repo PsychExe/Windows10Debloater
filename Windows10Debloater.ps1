@@ -111,10 +111,10 @@ Function Protect-Privacy {
         New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 1 -Verbose -ErrorAction SilentlyContinue
     }          
     
-    Write-Output "Setting Mixed Reality Portal value to 0 so that you can uninstall it in Settings"
+    Write-Output "Setting Mixed Reality Portal value to 1 so that you can uninstall it in Settings"
     If ('HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic') {
         $Holo = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic'
-        Set-ItemProperty $Holo -Name FirstRunSucceeded -Value 0 -Verbose
+        Set-ItemProperty $Holo -Name FirstRunSucceeded -Value 1 -Verbose
     }
     
     #Disables live tiles
@@ -238,11 +238,11 @@ Function Revert-Changes {
         New-ItemProperty $registryPath -Name DisableWindowsConsumerFeatures -Value 0 -Verbose -ErrorAction SilentlyContinue
     }
     
-    #Changes Mixed Reality Portal Key 'FirstRunSucceeded' to 1
-    Write-Output "Setting Mixed Reality Portal value to 1"
+    #Changes Mixed Reality Portal Key 'FirstRunSucceeded' to 0
+    Write-Output "Setting Mixed Reality Portal value to 0"
     If ('HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic') {
         $Holo = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic'
-        Set-ItemProperty $Holo -Name FirstRunSucceeded -Value 1 -Verbose
+        Set-ItemProperty $Holo -Name FirstRunSucceeded -Value 0 -Verbose
     }
     
     #Re-enables live tiles
@@ -377,7 +377,7 @@ Switch ($ReadHost) {
         Sleep 1
         Write-Output "Disabling Cortana from search, disabling feedback to Microsoft, and disabling scheduled tasks that are considered to be telemetry or unnecessary."
         Protect-Privacy
-        Write-Output "Cortana disbaled from search, feedback to Microsoft has been disabled, and scheduled tasks are disabled."
+        Write-Output "Cortana disabled from search, feedback to Microsoft has been disabled, and scheduled tasks are disabled."
         Sleep 1; $PublishSettings = $true
 
         Write-Output "Do you want to stop edge from taking over as the default PDF viewer?"
@@ -451,7 +451,3 @@ Switch ($ReadHost) {
         }
     }
 }
-    
-
-    
-    
