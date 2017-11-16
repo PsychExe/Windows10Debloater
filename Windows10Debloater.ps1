@@ -360,6 +360,13 @@ Switch ($ReadHost) {
 Write-Output "The following options will allow you to either Debloat Windows 10, or to revert changes made after Debloating Windows 10.
     Choose 'Debloat' to Debloat Windows 10 or choose 'Revert' to revert changes." 
 $Readhost = Read-Host " ( Debloat / Revert ) " 
+
+    reg load HKU\Default_User C:\Users\Default\NTUSER.DAT
+    Set-ItemProperty -Path Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name SystemPaneSuggestionsEnabled -Value 0
+    Set-ItemProperty -Path Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name PreInstalledAppsEnabled -Value 0
+    Set-ItemProperty -Path Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name OemPreInstalledAppsEnabled -Value 0
+    reg unload HKU\Default_User
+
 Switch ($ReadHost) {
     #This will debloat Windows 10
     Debloat {
